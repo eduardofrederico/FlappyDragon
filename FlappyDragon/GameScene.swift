@@ -10,19 +10,46 @@ import GameplayKit
 
 class GameScene: SKScene {
     
-    private var label : SKLabelNode?
-    private var spinnyNode : SKShapeNode?
+    var floor: SKSpriteNode!
+    var intro: SKSpriteNode!
+    var player: SKSpriteNode!
+    var gameArea: CGFloat = 410.0
     
     override func didMove(to view: SKView) {
+        
+        addBackground()
+        addFloor()
+        addIntro()
+        addPlayer()
+    }
+    
+    func addBackground() {
+        let background = SKSpriteNode(imageNamed: "background")
+        background.position = CGPoint(x: self.size.width/2, y: self.size.height/2)
+        background.zPosition = 0
+        addChild(background)
+    }
+    
+    func addFloor() {
+        floor = SKSpriteNode(imageNamed: "floor")
+        floor.zPosition = 2
+        floor.position = CGPoint(x: floor.size.width/2, y: size.height - gameArea - floor.size.height/2)
+        addChild(floor)
+    }
+    
+    func addIntro() {
+        intro = SKSpriteNode(imageNamed: "intro")
+        intro.zPosition = 3
+        intro.position = CGPoint(x: size.width/2, y: size.height - 210)
+        addChild(intro)
+    }
+    
+    func addPlayer() {
         
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let label = self.label {
-            label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-        }
         
-        for t in touches { self.touchDown(atPoint: t.location(in: self)) }
     }
     
     override func update(_ currentTime: TimeInterval) {
