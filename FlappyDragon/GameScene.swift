@@ -15,6 +15,12 @@ class GameScene: SKScene {
     var player: SKSpriteNode!
     var gameArea: CGFloat = 410.0
     var velocity: Double = 100.0
+    var gameFinished = false
+    var gameStarted = false
+    var restarted = false
+    var scoreLabel: SKLabelNode!
+    var score: Int = 0
+    var flyForce: CGFloat = 30.0
     
     override func didMove(to view: SKView) {
         
@@ -72,11 +78,34 @@ class GameScene: SKScene {
         floor.run(repeatAction)
     }
     
+    func addScore() {
+        scoreLabel = SKLabelNode(fontNamed: "Chalkduster")
+        scoreLabel.fontSize = 94
+        scoreLabel.text = "\(score)"
+        scoreLabel.zPosition = 5
+        scoreLabel.position = CGPoint(x: size.width/2, y: size.height - 100)
+        scoreLabel.alpha = 0.8
+        addChild(scoreLabel)
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
+        if !gameFinished {
+            if !gameStarted {
+                intro.removeFromParent()
+                addScore()
+                
+                player.physicsBody = SKPhysicsBody(circleOfRadius: player.size.width/2 - 10)
+                player.physicsBody?.isDynamic = true
+                player.physicsBody?.allowsRotation = true
+                player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: flyForce))
+            }
+        }
     }
     
     override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+        if gameStarted {
+            let yVelocity = player.physicsBody!.velocity.dy * 0.001 as CGFloat
+            player.zRotation = yVelocity
+        }
     }
 }
