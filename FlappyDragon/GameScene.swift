@@ -21,8 +21,13 @@ class GameScene: SKScene {
     var scoreLabel: SKLabelNode!
     var score: Int = 0
     var flyForce: CGFloat = 30.0
+    var playerCategory: UInt32 = 1
+    var enemyCategory: UInt32 = 2
+    var scoreCategory: UInt32 = 4
     
     override func didMove(to view: SKView) {
+        
+        physicsWorld.contactDelegate = self
         
         addBackground()
         addFloor()
@@ -47,6 +52,8 @@ class GameScene: SKScene {
         let invisibleFloor = SKNode()
         invisibleFloor.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: size.width, height: 1))
         invisibleFloor.physicsBody?.isDynamic = false
+        invisibleFloor.physicsBody?.categoryBitMask = enemyCategory
+        invisibleFloor.physicsBody?.contactTestBitMask = playerCategory
         invisibleFloor.position = CGPoint(x: size.width/2, y: size.height - gameArea)
         invisibleFloor.zPosition = 2
         addChild(invisibleFloor)
@@ -115,12 +122,22 @@ class GameScene: SKScene {
         enemyTop.zPosition = 1
         enemyTop.physicsBody = SKPhysicsBody(rectangleOf: enemyTop.size)
         enemyTop.physicsBody?.isDynamic = false
+        enemyTop.physicsBody?.categoryBitMask = enemyCategory
+        enemyTop.physicsBody?.contactTestBitMask = playerCategory
         
         let enemyBottom = SKSpriteNode(imageNamed: "enemybottom\(enemyNumber)")
         enemyBottom.position = CGPoint(x: size.width + enemyWidth/2, y: enemyTop.position.y - enemyTop.size.height - enemiesDistance)
         enemyBottom.zPosition = 1
         enemyBottom.physicsBody = SKPhysicsBody(rectangleOf: enemyBottom.size)
         enemyBottom.physicsBody?.isDynamic = false
+        enemyBottom.physicsBody?.categoryBitMask = enemyCategory
+        enemyBottom.physicsBody?.contactTestBitMask = playerCategory
+        
+        let laser = SKNode()
+        laser.position = CGPoint(x: enemyTop.position.x + enemyWidth/2, y: enemyTop.position.y - enemyTop.size.height/2 - enemiesDistance/2)
+        laser.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 1, height: enemiesDistance))
+        laser.physicsBody?.isDynamic = false
+        laser.physicsBody?.categoryBitMask = scoreCategory
         
         let distance = size.width + enemyWidth
         let duration = Double(distance)/velocity
@@ -130,9 +147,11 @@ class GameScene: SKScene {
         
         enemyTop.run(sequenceAction)
         enemyBottom.run(sequenceAction)
+        laser.run(sequenceAction)
         
         addChild(enemyTop)
         addChild(enemyBottom)
+        addChild(laser)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -145,6 +164,9 @@ class GameScene: SKScene {
                 player.physicsBody?.isDynamic = true
                 player.physicsBody?.allowsRotation = true
                 player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: flyForce))
+                player.physicsBody?.categoryBitMask = playerCategory
+                player.physicsBody?.collisionBitMask = enemyCategory
+                player.physicsBody?.contactTestBitMask = scoreCategory
                 
                 gameStarted = true
                 
@@ -164,4 +186,19 @@ class GameScene: SKScene {
             player.zRotation = yVelocity
         }
     }
+}
+
+extension GameScene: SKPhysicsContactDelegate {
+    func didBegin(_ contact: SKPhysicsContact) {
+        if gameStarted{
+            if contact.bodyA.categoryBitMask == scoreCategory || contact.bodyB.categoryBitMask == scoreCategory {
+                score += 1
+                scoreLabel.text = "\(score)"
+            } else if contact.bodyA.categoryBitMask == enemyCategory || contact.bodyB.categoryBitMask == enemyCategory {
+                print("Game Over!")
+            }
+        }
+        
+    }
+    
 }
